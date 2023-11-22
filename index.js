@@ -6,7 +6,7 @@ const basicAuth = require('express-basic-auth');
 const path = require("path");
 const _ = require("lodash");
 const moment = require("moment");
-const cli = require('cli').enable('catchall').enable('status');
+const cli = require('cli');
 
 const config = cli.parse({
   'smtp-port': ['s', 'SMTP port to listen on', 'number', 1025],
@@ -89,6 +89,7 @@ function parseEmail(stream) {
 }
 
 server.on('error', err => {
+  console.error(err)
   cli.error(err);
 });
 
