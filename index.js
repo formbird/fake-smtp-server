@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-const SMTPServer = require('smtp-server').SMTPServer;
-const simpleParser = require('mailparser').simpleParser;
-const express = require("express");
-const basicAuth = require('express-basic-auth');
-const path = require("path");
-const _ = require("lodash");
-const moment = require("moment");
-const cli = require('cli');
+import { SMTPServer } from 'smtp-server';
+import { simpleParser } from 'mailparser';
+import express, { static as expressStatic } from "express";
+import basicAuth from 'express-basic-auth';
+import { join } from "path";
+import { every } from "lodash";
+import moment from "moment";
+import { parse, error, info, debug } from 'cli';
 
-const config = cli.parse({
+const config = parse({
   'smtp-port': ['s', 'SMTP port to listen on', 'number', 1025],
   'smtp-ip': [false, 'IP Address to bind SMTP service to', 'ip', '0.0.0.0'],
   'http-port': ['h', 'HTTP port to listen on', 'number', 1080],
@@ -23,7 +23,7 @@ const whitelist = config.whitelist ? config.whitelist.split(',') : [];
 
 let users = null;
 if (config.auth && !/.+:.+/.test(config.auth)) {
-    cli.error("Please provide authentication details in USERNAME:PASSWORD format");
+    error("Please provide authentication details in USERNAME:PASSWORD format");
     console.log(process.exit(1))
 }
 if (config.auth) {
@@ -45,7 +45,7 @@ const server = new SMTPServer({
     }
   },
   onAuth(auth, session, callback) {
-    cli.info('SMTP login for user: ' + auth.username);
+    info('SMTP login for user: ' + auth.username);
     callback(null, {
       user: auth.username
     });
@@ -53,7 +53,7 @@ const server = new SMTPServer({
   onData(stream, session, callback) {
     parseEmail(stream).then(
       mail => {
-        cli.debug(JSON.stringify(mail, null, 2));
+        debug(JSON.stringify(mail, null, 2));
 
         mails.unshift(mail);
 
@@ -90,7 +90,7 @@ function parseEmail(stream) {
 
 server.on('error', err => {
   console.error(err)
-  cli.error(err);
+  error(err);
 });
 
 server.listen(config['smtp-port'], config['smtp-ip']);
@@ -110,9 +110,9 @@ if (users) {
     }));
 }
 
-const buildDir = path.join(__dirname, 'build');
+const buildDir = join(__dirname, 'build');
 
-app.use(express.static(buildDir));
+app.use(expressStatic(buildDir));
 
 function emailFilter(filter) {
   return email => {
@@ -126,11 +126,11 @@ function emailFilter(filter) {
       }
     }
 
-    if (filter.to && _.every(email.to.value, to => to.address !== filter.to)) {
+    if (filter.to && every(email.to.value, to => to.address !== filter.to)) {
       return false;
     }
 
-    if (filter.from && _.every(email.from.value, from => from.address !== filter.from)) {
+    if (filter.from && every(email.from.value, from => from.address !== filter.from)) {
       return false;
     }
 
@@ -148,7 +148,7 @@ app.delete('/api/emails', (req, res) => {
 });
 
 app.listen(config['http-port'], config['http-ip'], () => {
-  cli.info("HTTP server listening on http://" + config['http-ip'] +  ":" + config['http-port']);
+  info("HTTP server listening on http://" + config['http-ip'] +  ":" + config['http-port']);
 });
 
-cli.info("SMTP server listening on " + config['smtp-ip'] + ":" + config['smtp-port']);
+info("SMTP server listening on " + config['smtp-ip'] + ":" + config['smtp-port']);
