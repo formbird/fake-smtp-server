@@ -4,9 +4,10 @@ import { simpleParser } from 'mailparser';
 import express, { static as expressStatic } from "express";
 import basicAuth from 'express-basic-auth';
 import { join } from "path";
-import { every } from "lodash";
 import moment from "moment";
-import { parse, error, info, debug } from 'cli';
+import cliPkg from 'cli';
+const { parse, error, info, debug } = cliPkg;
+
 
 const config = parse({
   'smtp-port': ['s', 'SMTP port to listen on', 'number', 1025],
@@ -110,7 +111,8 @@ if (users) {
     }));
 }
 
-const buildDir = join(__dirname, 'build');
+
+const buildDir = join((new URL('build', import.meta.url)).pathname);
 
 app.use(expressStatic(buildDir));
 
@@ -126,11 +128,11 @@ function emailFilter(filter) {
       }
     }
 
-    if (filter.to && every(email.to.value, to => to.address !== filter.to)) {
+    if (filter.to && email.to.value.every(to => to.address !== filter.to)) {
       return false;
     }
 
-    if (filter.from && every(email.from.value, from => from.address !== filter.from)) {
+    if (filter.from && email.from.value.every(from => from.address !== filter.from)) {
       return false;
     }
 

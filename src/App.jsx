@@ -12,6 +12,8 @@ import {
 } from 'reactstrap';
 import moment from 'moment';
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 function openAttachment (attachment) {
   var byteArray = new Uint8Array(attachment.content.data);
   var file = new Blob([byteArray], { type: attachment.contentType });
