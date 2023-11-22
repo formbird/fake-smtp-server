@@ -1,10 +1,14 @@
-FROM node:10.15.2-alpine
-
-COPY . /www
+FROM node:20-alpine
 
 WORKDIR /www
 
-RUN npm i && npm run build
+COPY package*.json /www/
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
 
 EXPOSE 1025
 EXPOSE 1080
